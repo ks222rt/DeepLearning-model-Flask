@@ -6,10 +6,18 @@ Created on Tue Mar  7 15:44:48 2017
 """
 import csv
 from reco_scraper import RecoWebScraper
+from trustpilot_scraper import TrustPilotScraper
+
 
 reco = RecoWebScraper()
 reco.init_scrape_websites()
-list = reco.get_list()
+list_one = reco.get_list()
+
+trustpilot = TrustPilotScraper()
+trustpilot.init_scrape_websites()
+list_two = trustpilot.get_list()
+
+complete_list = list_one + list_two
 
 f = open('dataset', 'w', encoding='utf-8')
 try:
