@@ -18,7 +18,19 @@ trustpilot.init_scrape_websites()
 list_two = trustpilot.get_list()
 
 complete_list = list_one + list_two
+pos = 0
+neu = 0
+neg = 0
 
+for num in range(0, len(complete_list)):
+    if complete_list[num]['points'] < 3:
+        neg += 1
+    elif complete_list[num]['points'] > 3:
+        pos += 1
+    else:
+        neu += 1
+    
+    
 f = open('dataset', 'w', encoding='utf-8')
 try:
     writer = csv.writer(f)
