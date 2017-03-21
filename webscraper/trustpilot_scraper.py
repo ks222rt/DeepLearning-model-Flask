@@ -34,7 +34,7 @@ class TrustPilotScraper(object):
                           'www.solfaktor.se', 'www.viagogo.se', 'www.perspektivbredband.se',
                           'www.dhl.se', 'www.sj.se', 'www.homeenter.com', 'zalando.se',
                           'www.modekungen.se', 'tailorstore.se', 'www.beddo.se', 'wegot.se',
-                          'lampornu.se', 'www.designdelicatessen.se', 'servicefinder.se', 'seuf.se',
+                          'lampornu.se', 'www.designdelicatessen.se', 'servicefinder.se',
                           'www.elgiganten.se', 'www.babykul.se', 'www.goboken.se', 'scstyling.com',
                           'motorsweden.se', 'vikoperdinbil.se', 'www.ups.se', 'www.momondo.se',
                           'www.apartdirect.com', 'shirtstore.se', 'delightfulhair.com',
@@ -42,7 +42,7 @@ class TrustPilotScraper(object):
                           'www.mediamarkt.se', 'www.siba.se', 'www.halebop.se', 
                           'globalcar.se']
         self.token = 'organisationen'
-        self.amount_pages = 4
+        self.amount_pages = 7
         
     def init_scrape_websites(self):
         for company in self.companies:
@@ -58,40 +58,41 @@ class TrustPilotScraper(object):
     
     def scrape_website(self, soup, company):
         list_of_review_containers = soup.find(id = "reviews-container")
-        list_of_reviews = list_of_review_containers.find_all("div", attrs = {'class': 'review-stack'})
-        company = company.replace("-", " ")
-        
-        for row_number in range(0, len(list_of_reviews)):
-            review = { 'text': "", 'rating': "", 'points': 0}
-            review_text = list_of_reviews[row_number].find("div", attrs = {'class': 'review-body'})
-            review_points = list_of_reviews[row_number].find("div", attrs = {'class': 'star-rating'})
-            text = ""
+        if list_of_review_containers:
+            list_of_reviews = list_of_review_containers.find_all("div", attrs = {'class': 'review-stack'})
+            company = company.replace("-", " ")
             
-            if review_text:
-                for sentence in review_text: 
-                    if isinstance(sentence, bs4.element.NavigableString):
-                        try:
-                            if langdetect.detect(sentence.string) == 'sv':
-                                sentence_string = str(sentence.string.replace("\n", " ").strip() + " ")
-                                text += sentence_string.lower()
-                        except langdetect.lang_detect_exception.LangDetectException as e:
-                            print(e)
-            
-            if text.find(company) > -1:
-                text = text.replace(company, self.token)
-            
-            if text != "":
-                review['text'] = text
-                """review['rating'] = int(review_points.attrs['class'][1][-1])"""
-                if int(review_points.attrs['class'][1][-1]) < 3:
-                    review['rating'] = 'negative'
-                elif int(review_points.attrs['class'][1][-1]) > 3:
-                    review['rating'] = 'positive'
-                else:
-                    review['rating'] = 'neutral'
-                review['points'] = int(review_points.attrs['class'][1][-1])
-                self.listOfRatings.append(review)
-            
+            for row_number in range(0, len(list_of_reviews)):
+                review = { 'text': "", 'rating': "", 'points': 0}
+                review_text = list_of_reviews[row_number].find("div", attrs = {'class': 'review-body'})
+                review_points = list_of_reviews[row_number].find("div", attrs = {'class': 'star-rating'})
+                text = ""
+                
+                if review_text:
+                    for sentence in review_text: 
+                        if isinstance(sentence, bs4.element.NavigableString):
+                            try:
+                                if langdetect.detect(sentence.string) == 'sv':
+                                    sentence_string = str(sentence.string.replace("\n", " ").strip() + " ")
+                                    text += sentence_string.lower()
+                            except langdetect.lang_detect_exception.LangDetectException as e:
+                                print(e)
+                
+                if text.find(company) > -1:
+                    text = text.replace(company, self.token)
+                
+                if text != "":
+                    review['text'] = text
+                    """review['rating'] = int(review_points.attrs['class'][1][-1])"""
+                    if int(review_points.attrs['class'][1][-1]) < 3:
+                        review['rating'] = 'negative'
+                    elif int(review_points.attrs['class'][1][-1]) > 3:
+                        review['rating'] = 'positive'
+                    else:
+                        review['rating'] = 'neutral'
+                    review['points'] = int(review_points.attrs['class'][1][-1])
+                    self.listOfRatings.append(review)
+                
     def get_list(self):
         return self.listOfRatings
     
@@ -150,25 +151,24 @@ class TrustPilotScraper(object):
       11. 'www.apartdirect.com' = 5.8 (65 omdömen),
       12. 'www.outnorth.se' = 5.9 (94 omdömen),
       13. 'www.komplett.se' = 6.0 (79 omdömen),
-      14. 'seuf.se' = 6.5 (63 omdömen),
-      15. 'www.coolskins.se' = 6.5 (85 omdömen),
-      16. 'seuf.se' = 6.5 (63 omdömen),
-      17. 'www.plastikplagg.se' = 6.5 (96 omdömen),
-      18. 'www.momondo.se' = 6.5 (106 omdömen),
-      19. 'lampornu.se' = 6.6 (332 omdömen),
-      20. 'wegot.se' = 6.6 (225 omdömen),
-      21. '121doc.se' = 6.7 (150 omdömen),
-      22. 'www.solfaktor.se' = 6.7 (250 omdömen),
-      23. 'www.travelstart.se' = 6.7 (4048 omdömen),
-      24. 'scstyling.com' = 6.7 (275 omdömen),
-      25. 'www.noos.se' = 6.7 (247 omdömen),
-      26. 'www.bygghemma.se' = 6.8 (768 omdömen),
-      27. 'www.hth.se' = 6.8 (113 omdömen),
-      28  'motorsweden.se' = 6.8 (186 omdömen),
-      29  'delightfulhair.com' = 6.8 (1131 omdömen),
-      30  'www.el24online.se' = 6.8 (67 omdömen),
-      31. 'klarna.com/sv' = 6.9 (5288 omdömen), 
-      32  'shirtstore.se' = 6.9 (171 omdömen),
+      14. 'www.coolskins.se' = 6.5 (85 omdömen),
+      15. 'seuf.se' = 6.5 (63 omdömen),
+      16. 'www.plastikplagg.se' = 6.5 (96 omdömen),
+      17. 'www.momondo.se' = 6.5 (106 omdömen),
+      18. 'lampornu.se' = 6.6 (332 omdömen),
+      19. 'wegot.se' = 6.6 (225 omdömen),
+      20. '121doc.se' = 6.7 (150 omdömen),
+      21. 'www.solfaktor.se' = 6.7 (250 omdömen),
+      22. 'www.travelstart.se' = 6.7 (4048 omdömen),
+      23. 'scstyling.com' = 6.7 (275 omdömen),
+      24. 'www.noos.se' = 6.7 (247 omdömen),
+      25. 'www.bygghemma.se' = 6.8 (768 omdömen),
+      26. 'www.hth.se' = 6.8 (113 omdömen),
+      27. 'motorsweden.se' = 6.8 (186 omdömen),
+      28. 'delightfulhair.com' = 6.8 (1131 omdömen),
+      29. 'www.el24online.se' = 6.8 (67 omdömen),
+      30. 'klarna.com/sv' = 6.9 (5288 omdömen), 
+      31. 'shirtstore.se' = 6.9 (171 omdömen),
       
       
   Rating 4-5 stars (Trustscore 7.0 - 10)
