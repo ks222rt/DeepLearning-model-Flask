@@ -16,6 +16,16 @@ from keras.models import Sequential
 from keras.layers import Embedding
 from keras.layers import Conv1D, Flatten, Dropout, Dense, pooling, Activation
 
+import tflearn
+import tensorflow as tf
+from tflearn.data_utils import VocabularyProcessor
+from tflearn.data_utils import pad_sequences
+from tflearn.layers.core import input_data, dropout, fully_connected
+from tflearn.layers.conv import conv_1d, global_max_pool
+from tflearn.layers.merge_ops import merge
+from tflearn.layers.estimator import regression
+
+
 # Import dataset from csv file and drop unecessary field
 dataset = pd.read_csv('datasetFullList')
 dataset.drop('index', axis=1, inplace=True)
@@ -24,7 +34,7 @@ dataset.drop('index', axis=1, inplace=True)
 max_words = max([len(x.split()) for x in dataset['text']])
 
 # Get vocabulare size from longest sentence
-vocab = learn.preprocessing.VocabularyProcessor(max_words)
+vocab = VocabularyProcessor(max_words)
 
 # Encode pos, neu and neg to numbers
 labelEncoder = LabelEncoder()
@@ -42,29 +52,28 @@ X = np.array(list(vocab.fit_transform(X)))
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size = 0.20, random_state = 1)
 
 # Pad the sequences to fit the longest sentence
-X_train = sequence.pad_sequences(X_train, maxlen = max_words)
-X_test = sequence.pad_sequences(X_test, maxlen = max_words)
+X_train = pad_sequences(X_train, maxlen = max_words, value=0.)
+X_test = pad_sequences(X_test, maxlen = max_words, value=0.)
 
 max_features = X.max(axis = 0)
 max_features = max_features.max()
 # Build the CNN model
-model = Sequential()
 
-model.add(Embedding(max_features, 50, input_length=max_words))
-model.add(Dropout(float(1)))
-model.add(Conv1D(64, 5))
-model.add(pooling.MaxPooling1D())
-model.add(Dense(250))
-model.add(Dropout(0.2))
-model.add(Activation('relu'))
-model.add(Dense(1))
-model.add(Activation('sigmoid'))
+cnn_model = input_data(shape=[None, max_words], name='input')
+cnn_model = tflearn.embedding(cnn_model, input_dim = max_features, output_dim = 128)
+branch1 = conv_1d(cnn_model, 128, 3, padding = 'valid', activation = 'relu', regularizer = 'L2')
+branch2 = conv_1d(cnn_model, 128, 4, padding = 'valid', activation = 'relu', regularizer = 'L2')
+branch3 = conv_1d(cnn_model, 128, 5, padding = 'valid', activation = 'relu', regularizer = 'L2')
+cnn_model = merge([branch1, branch2, branch3], mode = 'concat', axis = 1)
+cnn_model = tf.expand_dims(cnn_model, 2)
+cnn_model = global_max_pool(cnn_model)
+cnn_model = dropout(cnn_model, 0.5)
+cnn_model = fully_connected(cnn_model, 2, activation = 'softmax')
+cnn_model = regression(cnn_model, optimizer = 'adam', learning_rate = 0.001, 
+                       loss = 'categorical_crossentropy', name = 'target')
 
-
-
-
-
-
+model = tflearn.DNN(cnn_model, tensorboard_verbose = 0)
+model.fit(X_train, Y_train, n_epoch = 5, shuffle = True, validation_set=(X_test, Y_test), show_metric = True)
 
 
 
