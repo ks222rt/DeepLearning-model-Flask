@@ -5,7 +5,6 @@ Created on Thu Mar 23 11:03:17 2017
 @author: Kristoffer
 """
 
-"""import tensorflow as tf"""
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
@@ -14,7 +13,7 @@ from tensorflow.contrib import learn
 from keras.preprocessing import sequence
 from keras.models import Sequential
 from keras.layers import Embedding
-from keras.layers import Conv1D, Flatten, Dropout, Dense, pooling, Activation
+from keras.layers import Conv1D, Flatten, Dropout, Dense, MaxPooling1D, Activation
 
 # Import dataset from csv file and drop unecessary field
 dataset = pd.read_csv('datasetFullList')
@@ -47,22 +46,21 @@ X_test = sequence.pad_sequences(X_test, maxlen = max_words)
 
 max_features = X.max(axis = 0)
 max_features = max_features.max()
+
+
 # Build the CNN model
 model = Sequential()
-
-model.add(Embedding(max_features, 50, input_length=max_words))
-model.add(Dropout(float(1)))
-model.add(Conv1D(64, 5))
-model.add(pooling.MaxPooling1D())
-model.add(Dense(250))
-model.add(Dropout(0.2))
-model.add(Activation('relu'))
-model.add(Dense(1))
-model.add(Activation('sigmoid'))
-
-
-
-
+model.add(Conv1D(nb_filter = 75, filter_length = 3, activation = 'relu',
+                 input_dim = 3, input_length = max_words))
+model.add(Dropout(1/5))
+model.add(MaxPooling1D(pool_length = 8))
+model.add(Flatten())
+model.add(Dense(100, activation = 'relu'))
+model.add(Dropout(0.5))
+model.add(Dense(30, activation = 'relu'))
+model.add(Dropout(0.5))
+model.add(Dense(1, activation = 'sigmoid'))
+model.compile(loss = 'binary_crossentropy', optimizer = 'adam', class_mode = 'binary')
 
 
 
