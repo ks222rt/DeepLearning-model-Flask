@@ -57,11 +57,8 @@ X_test = pad_sequences(X_test, maxlen = max_words, value=0.)
 Y_train = to_categorical(Y_train, nb_classes = 3)
 Y_test = to_categorical(Y_test, nb_classes = 3)
 
-max_features = X.max(axis = 0)
-max_features = max_features.max()
-
 cnn_model = input_data(shape=[None, max_words], name='input')
-cnn_model = tflearn.embedding(cnn_model, input_dim = max_features, output_dim = 128)
+cnn_model = tflearn.embedding(cnn_model, input_dim = len(vocab.vocabulary_), output_dim = 128)
 #cnn_model= tflearn.layers.core.reshape(cnn_model, new_shape = [batch_size, 1, max_words, 128])
 branch1 = conv_1d(cnn_model, nb_filter = 100,  filter_size = 3, padding = 'same', activation = 'relu', regularizer = 'L2')
 branch2 = conv_1d(cnn_model, nb_filter = 100,  filter_size = 4, padding = 'same', activation = 'relu', regularizer = 'L2')
@@ -78,7 +75,10 @@ model = tflearn.DNN(cnn_model, tensorboard_verbose = 0)
 model.fit(X_train, Y_train, n_epoch = 5, shuffle = False, validation_set=(X_test, Y_test), show_metric = True, batch_size = batch_size)
 
 
-
+validate = [['Restaurangens mat var så pass dålig att jag spydde'], ['Älskar den servicen som de ger'], ['vet ej vad jag skall säga, inget dåligt inget bra']]
+validate_x = np.array(list(vocab.transform([x[0] for x in validate])))
+validate_x = pad_sequences(validate_x, maxlen = max_words, value = 0.)
+result = model.predict(validate_x)
 
 
 
