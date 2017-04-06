@@ -60,20 +60,22 @@ Y_test = to_categorical(Y_test, nb_classes = 3)
 cnn_model = input_data(shape=[None, max_words], name='input')
 cnn_model = tflearn.embedding(cnn_model, input_dim = len(vocab.vocabulary_), output_dim = 128)
 #cnn_model= tflearn.layers.core.reshape(cnn_model, new_shape = [batch_size, 1, max_words, 128])
-branch1 = conv_1d(cnn_model, nb_filter = 100,  filter_size = 3, padding = 'same', activation = 'relu', regularizer = 'L2')
-branch2 = conv_1d(cnn_model, nb_filter = 100,  filter_size = 4, padding = 'same', activation = 'relu', regularizer = 'L2')
-branch3 = conv_1d(cnn_model, nb_filter = 100,  filter_size = 5, padding = 'same', activation = 'relu', regularizer = 'L2')
+branch1 = conv_1d(cnn_model, nb_filter = 128,  filter_size = 3, padding = 'same', activation = 'relu', regularizer = 'L2')
+branch2 = conv_1d(cnn_model, nb_filter = 128,  filter_size = 4, padding = 'same', activation = 'relu', regularizer = 'L2')
+branch3 = conv_1d(cnn_model, nb_filter = 128,  filter_size = 5, padding = 'same', activation = 'relu', regularizer = 'L2')
 cnn_model = merge([branch1, branch2, branch3], mode = 'concat', axis = 1)
 cnn_model = tf.expand_dims(cnn_model, 2)
 cnn_model = global_max_pool(cnn_model)
-cnn_model = dropout(cnn_model, 0.5)
+cnn_model = dropout(cnn_model, 0.6)
 cnn_model = fully_connected(cnn_model, 3, activation = 'softmax')
 cnn_model = regression(cnn_model, optimizer = 'adam', learning_rate = 0.001, 
                        loss = 'categorical_crossentropy', name = 'target')
 
-model = tflearn.DNN(cnn_model, tensorboard_verbose = 0)
-model.fit(X_train, Y_train, n_epoch = 5, shuffle = False, validation_set=(X_test, Y_test), show_metric = True, batch_size = batch_size)
+model = tflearn.DNN(cnn_model, tensorboard_verbose = 0, tensorboard_dir = '/logs/')
+model.fit(X_train, Y_train, n_epoch = 5, validation_set = (X_test, Y_test), shuffle = True, show_metric = True, batch_size = batch_size, run_id = 'CNN-3convs-64bs-128f')
+#metrix_score = model.evaluate(X_test, Y_test, batch_size = batch_size)
 
+model.save('cnn')
 
 validate = [['Restaurangens mat var så pass dålig att jag spydde'], ['Älskar den servicen som de ger'], ['vet ej vad jag skall säga, inget dåligt inget bra']]
 validate_x = np.array(list(vocab.transform([x[0] for x in validate])))
